@@ -1,6 +1,5 @@
 package com.scalable.apis.demo.service;
 
-import com.scalable.apis.demo.dto.NotesDto;
 import com.scalable.apis.demo.dto.NotesRequest;
 import com.scalable.apis.demo.dto.CustomResponse;
 import com.scalable.apis.demo.entity.Note;
@@ -10,7 +9,6 @@ import com.scalable.apis.demo.exception.UnAuthorizedAccessException;
 import com.scalable.apis.demo.exception.UserNotFoundException;
 import com.scalable.apis.demo.repository.NoteRepository;
 import com.scalable.apis.demo.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

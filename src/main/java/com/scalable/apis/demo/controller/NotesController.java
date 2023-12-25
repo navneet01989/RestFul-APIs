@@ -1,9 +1,9 @@
 package com.scalable.apis.demo.controller;
 
+import com.scalable.apis.demo.Utils.Utils;
 import com.scalable.apis.demo.exception.EmptyDataException;
 import com.scalable.apis.demo.dto.NotesRequest;
 import com.scalable.apis.demo.dto.CustomResponse;
-import com.scalable.apis.demo.exception.NoteNotFoundException;
 import com.scalable.apis.demo.exception.UnAuthorizedAccessException;
 import com.scalable.apis.demo.exception.UserNotFoundException;
 import com.scalable.apis.demo.service.NotesService;
@@ -31,7 +31,7 @@ public class NotesController {
             CustomResponse customResponse = notesService.getNote(id);
             return new ResponseEntity<>(customResponse, customResponse.getStatus());
         } catch (UnAuthorizedAccessException e) {
-            return returnErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED);
+            return Utils.returnErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -41,9 +41,9 @@ public class NotesController {
             CustomResponse customResponse = notesService.updateNote(id, notesRequest);
             return new ResponseEntity<>(customResponse, customResponse.getStatus());
         } catch (EmptyDataException e) {
-            return returnErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
+            return Utils.returnErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (UnAuthorizedAccessException e) {
-            return returnErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED);
+            return Utils.returnErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -59,7 +59,7 @@ public class NotesController {
             CustomResponse customResponse = notesService.deleteNote(id);
             return new ResponseEntity<>(customResponse, customResponse.getStatus());
         } catch (UnAuthorizedAccessException e) {
-            return returnErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED);
+            return Utils.returnErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -69,9 +69,9 @@ public class NotesController {
             CustomResponse customResponse = notesService.shareNote(id, username);
             return new ResponseEntity<>(customResponse, customResponse.getStatus());
         } catch (UnAuthorizedAccessException e) {
-            return returnErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED);
+            return Utils.returnErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED);
         } catch (UserNotFoundException e) {
-            return returnErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND);
+            return Utils.returnErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
 
@@ -79,12 +79,5 @@ public class NotesController {
     public ResponseEntity<CustomResponse> searchNote(@RequestParam(name = "param") String param) {
         CustomResponse customResponse = notesService.searchNote(param);
         return new ResponseEntity<>(customResponse, customResponse.getStatus());
-    }
-
-    private ResponseEntity<CustomResponse> returnErrorResponse(String message, HttpStatus httpStatus) {
-        CustomResponse customResponse = new CustomResponse();
-        customResponse.setMessage(message);
-        customResponse.setStatus(httpStatus);
-        return new ResponseEntity<>(customResponse, httpStatus);
     }
 }

@@ -1,9 +1,12 @@
 package com.scalable.apis.demo.service;
 
+import com.scalable.apis.demo.dto.CustomResponse;
 import com.scalable.apis.demo.dto.SignupRequest;
 import com.scalable.apis.demo.dto.JwtRequest;
 import com.scalable.apis.demo.dto.JwtResponse;
 import com.scalable.apis.demo.entity.User;
+import com.scalable.apis.demo.exception.RateLimitException;
+import com.scalable.apis.demo.exception.UserAlreadyExistException;
 import com.scalable.apis.demo.repository.UserRepository;
 import com.scalable.apis.demo.security.JwtHelper;
 import io.github.bucket4j.Bucket;
@@ -13,7 +16,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -56,7 +58,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    void testSignup() {
+    void testSignup() throws UserAlreadyExistException {
         SignupRequest signupRequest = new SignupRequest();
         signupRequest.setUsername("testUser");
         signupRequest.setPassword("testPassword");
@@ -64,10 +66,10 @@ public class AuthServiceTest {
         when(signupBucket.tryConsume(1)).thenReturn(true);
         when(userRepository.existsByUsername("testUser")).thenReturn(false);
 
-        ResponseEntity<String> response = authService.signup(signupRequest);
+        CustomResponse response = authService.signup(signupRequest);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("User registered successfully!", response.getBody());
+        assertEquals(HttpStatus.OK, response.getStatus());
+        assertEquals("User registered successfully!", response.getMessage());
 
         verify(signupBucket, times(1)).tryConsume(1);
         verify(userRepository, times(1)).existsByUsername("testUser");
@@ -75,7 +77,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    void testLogin() {
+    void testLogin() throws RateLimitException {
         JwtRequest jwtRequest = new JwtRequest();
         jwtRequest.setUsername("testUser");
         jwtRequest.setPassword("testPassword");
@@ -84,10 +86,11 @@ public class AuthServiceTest {
         when(userDetailsService.loadUserByUsername("testUser")).thenReturn(mock(UserDetails.class));
         when(jwtHelper.generateToken(any(UserDetails.class))).thenReturn("mockedToken");
 
-        ResponseEntity<JwtResponse> response = authService.login(jwtRequest);
+        CustomResponse response = authService.login(jwtRequest);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("mockedToken", response.getBody().getJwtToken());
+        assertEquals(HttpStatus.OK, response.getStatus());
+        JwtResponse jwtResponse = (JwtResponse) response.getData();
+        assertEquals("mockedToken", jwtResponse.getJwtToken());
 
         verify(loginBucket, times(1)).tryConsume(1);
         verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));

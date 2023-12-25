@@ -4,7 +4,6 @@ import com.scalable.apis.demo.Utils.Utils;
 import com.scalable.apis.demo.dto.CustomResponse;
 import com.scalable.apis.demo.dto.SignupRequest;
 import com.scalable.apis.demo.dto.JwtRequest;
-import com.scalable.apis.demo.dto.JwtResponse;
 import com.scalable.apis.demo.exception.RateLimitException;
 import com.scalable.apis.demo.exception.UserAlreadyExistException;
 import com.scalable.apis.demo.service.AuthService;

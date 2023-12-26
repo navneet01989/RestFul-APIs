@@ -2,6 +2,7 @@
 For building and running the application you need:
 - [JDK 17.0.9]
 - [Gradle 8.5]
+- [Spring Boot 3.1.0]
 ## Tools used
 - [PostgreSQL DB] is one of the robust databases available in the industry which is free and open source
 - [Project Lombok] helps to avoid writing the getters and setters etc. that to save time.

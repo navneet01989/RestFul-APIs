@@ -78,6 +78,7 @@ public class NotesController {
     @GetMapping("/search")
     public ResponseEntity<CustomResponse> searchNote(@RequestParam(name = "param") String param) {
         CustomResponse customResponse = notesService.searchNote(param);
+        customResponse.setStatus(HttpStatus.OK);
         return new ResponseEntity<>(customResponse, customResponse.getStatus());
     }
 }

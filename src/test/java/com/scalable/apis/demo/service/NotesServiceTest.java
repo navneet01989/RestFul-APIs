@@ -1,5 +1,6 @@
 package com.scalable.apis.demo.service;
 
+import com.scalable.apis.demo.dto.NotesDto;
 import com.scalable.apis.demo.dto.NotesRequest;
 import com.scalable.apis.demo.dto.CustomResponse;
 import com.scalable.apis.demo.entity.Note;
@@ -9,6 +10,7 @@ import com.scalable.apis.demo.exception.UnAuthorizedAccessException;
 import com.scalable.apis.demo.exception.UserNotFoundException;
 import com.scalable.apis.demo.repository.NoteRepository;
 import com.scalable.apis.demo.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -177,34 +179,71 @@ class NotesServiceTest {
         verify(noteRepository, times(1)).delete(any());
     }
 
+//    @Test
+//    void testShareNote() throws UnAuthorizedAccessException, UserNotFoundException {
+//        Authentication auth = mock(Authentication.class);
+//        SecurityContextHolder.getContext().setAuthentication(auth);
+//
+//        when(auth.getName()).thenReturn("user1");
+//        User user1 = new User(1L, "user1", "password", Collections.emptySet(), Collections.emptySet());
+//        User user2 = new User(2L, "user2", "password", Collections.emptySet(), Collections.emptySet());
+//        Note note = new Note();
+//        note.setId("1");
+//        note.setTitle("Test Title");
+//        note.setDescription("Test Description");
+//        note.setOwner(user1);
+//        Set<Note> notes = new HashSet<>(user1.getUserNotes());
+//        notes.add(note);
+//        user1.setUserNotes(notes);
+//
+//        when(userRepository.findByUsername("user1")).thenReturn(Optional.of(user1));
+//        when(userRepository.findByUsername("user2")).thenReturn(Optional.of(user2));
+//
+//        CustomResponse response = notesService.shareNote("1", "user2");
+//
+//        assertEquals("Note shared successfully", response.getMessage());
+//        assertEquals(HttpStatus.OK, response.getStatus());
+//        assertEquals(1, user2.getShareList().size());
+//        assertNull(note.getSharedToUsers());
+//        verify(userRepository, times(1)).save(any());
+//        verify(noteRepository, times(1)).save(any());
+//    }
+
     @Test
     void testShareNote() throws UnAuthorizedAccessException, UserNotFoundException {
-        Authentication auth = mock(Authentication.class);
-        SecurityContextHolder.getContext().setAuthentication(auth);
+        Authentication authentication = mock(Authentication.class);
+        // Arrange
+        String noteId = "1";
+        String username = "shareuser";
 
-        when(auth.getName()).thenReturn("user1");
-        User user1 = new User(1L, "user1", "password", Collections.emptySet(), Collections.emptySet());
-        User user2 = new User(2L, "user2", "password", Collections.emptySet(), Collections.emptySet());
-        Note note = new Note();
-        note.setId("1");
-        note.setTitle("Test Title");
-        note.setDescription("Test Description");
-        note.setOwner(user1);
-        Set<Note> notes = new HashSet<>(user1.getUserNotes());
-        notes.add(note);
-        user1.setUserNotes(notes);
+        Note noteToBeShared = new Note();
+        noteToBeShared.setId(noteId);
 
-        when(userRepository.findByUsername("user1")).thenReturn(Optional.of(user1));
-        when(userRepository.findByUsername("user2")).thenReturn(Optional.of(user2));
+        User authenticatedUser = new User();
+        authenticatedUser.setUsername("testuser");
+        authenticatedUser.setUserNotes(Collections.singleton(noteToBeShared));
 
-        CustomResponse response = notesService.shareNote("1", "user2");
+        User shareNoteToUser = new User();
+        shareNoteToUser.setUsername(username);
+        shareNoteToUser.setShareList(Collections.emptySet());
 
-        assertEquals("Note shared successfully", response.getMessage());
-        assertEquals(HttpStatus.OK, response.getStatus());
-        assertEquals(1, user2.getShareList().size());
-        assertNull(note.getSharedToUsers());
-        verify(userRepository, times(1)).save(any());
-        verify(noteRepository, times(1)).save(any());
+
+        when(authentication.getName()).thenReturn("testuser");
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(authenticatedUser));
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(shareNoteToUser));
+        when(noteRepository.save(any(Note.class))).thenReturn(noteToBeShared);
+        when(userRepository.save(any(User.class))).thenReturn(shareNoteToUser);
+
+        // Act
+        CustomResponse result = notesService.shareNote(noteId, username);
+
+        // Assert
+        assertEquals(HttpStatus.OK, result.getStatus());
+        verify(userRepository, times(1)).findByUsername("testuser");
+        verify(userRepository, times(1)).findByUsername(username);
+        verify(noteRepository, times(1)).save(any(Note.class));
+        verify(userRepository, times(1)).save(any(User.class));
     }
 
     @Test

@@ -72,7 +72,9 @@ public class NotesService {
         Note note = user
                 .getUserNotes()
                 .stream()
-                .filter(noteIterator -> noteIterator.getId().equals(id)).findFirst().orElseThrow(() -> new UnAuthorizedAccessException("Unauthorized access to note or note not found"));
+                .filter(noteIterator -> noteIterator.getId().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new UnAuthorizedAccessException("Unauthorized access to note or note not found"));
         Set<UserDto> userDtos = new HashSet<>();
         if (note.getSharedToUsers() != null && !note.getSharedToUsers().isEmpty()) {
             for (User userForDto : note.getSharedToUsers()) {
@@ -134,21 +136,25 @@ public class NotesService {
     public CustomResponse shareNote(String id, String username) throws UnAuthorizedAccessException, UserNotFoundException {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user = userRepository.findByUsername(auth.getName()).get();
-        Note note = user
+        Note noteToBeShared = user
                 .getUserNotes()
                 .stream()
-                .filter(noteIterator -> noteIterator.getId().equals(id)).findFirst().orElseThrow(() -> new UnAuthorizedAccessException("Unauthorized access to note or note not found"));
+                .filter(noteIterator -> noteIterator.getId().equals(id)).findFirst().orElseThrow(() -> new UnAuthorizedAccessException("Unauthorized access to noteToBeShared or noteToBeShared not found"));
         User shareNoteToUser = userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException("User not found"));
         Set<Note> noteShareList = new HashSet<>(shareNoteToUser.getShareList());
-        noteShareList.add(note);
+        noteShareList.add(noteToBeShared);
         shareNoteToUser.setShareList(noteShareList);
         userRepository.save(shareNoteToUser);
-        if (note.getSharedToUsers() != null && !note.getSharedToUsers().isEmpty()) {
-            Set<User> shareToUser = new HashSet<>(note.getSharedToUsers());
+        if (noteToBeShared.getSharedToUsers() != null && !noteToBeShared.getSharedToUsers().isEmpty()) {
+            Set<User> shareToUser = new HashSet<>(noteToBeShared.getSharedToUsers());
             shareToUser.add(shareNoteToUser);
-            note.setSharedToUsers(shareToUser);
+            noteToBeShared.setSharedToUsers(shareToUser);
+        } else {
+            Set<User> shareToUser = new HashSet<>();
+            shareToUser.add(shareNoteToUser);
+            noteToBeShared.setSharedToUsers(shareToUser);
         }
-        noteRepository.save(note);
+        noteRepository.save(noteToBeShared);
         CustomResponse customResponse = new CustomResponse();
         customResponse.setMessage("Note shared successfully");
         customResponse.setStatus(OK);

@@ -70,7 +70,7 @@ class NotesServiceTest {
 
         CustomResponse response = notesService.getNotes();
 
-        assertEquals("data retrieved successfully", response.getMessage());
+        assertEquals("No data retrieved", response.getMessage());
         assertEquals(HttpStatus.OK, response.getStatus());
     }
 

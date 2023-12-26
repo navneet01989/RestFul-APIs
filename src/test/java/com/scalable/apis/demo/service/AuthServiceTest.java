@@ -29,10 +29,7 @@ import static org.mockito.Mockito.*;
 public class AuthServiceTest {
 
     @Mock
-    private Bucket loginBucket;
-
-    @Mock
-    private Bucket signupBucket;
+    private Bucket bucket;
 
     @Mock
     private UserDetailsService userDetailsService;
@@ -58,12 +55,12 @@ public class AuthServiceTest {
     }
 
     @Test
-    void testSignup() throws UserAlreadyExistException {
+    void testSignup() throws UserAlreadyExistException, RateLimitException {
         SignupRequest signupRequest = new SignupRequest();
         signupRequest.setUsername("testUser");
         signupRequest.setPassword("testPassword");
 
-        when(signupBucket.tryConsume(1)).thenReturn(true);
+        when(bucket.tryConsume(1)).thenReturn(true);
         when(userRepository.existsByUsername("testUser")).thenReturn(false);
 
         CustomResponse response = authService.signup(signupRequest);
@@ -71,7 +68,7 @@ public class AuthServiceTest {
         assertEquals(HttpStatus.OK, response.getStatus());
         assertEquals("User registered successfully!", response.getMessage());
 
-        verify(signupBucket, times(1)).tryConsume(1);
+        verify(bucket, times(1)).tryConsume(1);
         verify(userRepository, times(1)).existsByUsername("testUser");
         verify(userRepository, times(1)).save(any(User.class));
     }
@@ -82,7 +79,7 @@ public class AuthServiceTest {
         jwtRequest.setUsername("testUser");
         jwtRequest.setPassword("testPassword");
 
-        when(loginBucket.tryConsume(1)).thenReturn(true);
+        when(bucket.tryConsume(1)).thenReturn(true);
         when(userDetailsService.loadUserByUsername("testUser")).thenReturn(mock(UserDetails.class));
         when(jwtHelper.generateToken(any(UserDetails.class))).thenReturn("mockedToken");
 
@@ -92,7 +89,7 @@ public class AuthServiceTest {
         JwtResponse jwtResponse = (JwtResponse) response.getData();
         assertEquals("mockedToken", jwtResponse.getJwtToken());
 
-        verify(loginBucket, times(1)).tryConsume(1);
+        verify(bucket, times(1)).tryConsume(1);
         verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(userDetailsService, times(1)).loadUserByUsername("testUser");
         verify(jwtHelper, times(1)).generateToken(any(UserDetails.class));

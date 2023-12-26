@@ -25,9 +25,7 @@ import static org.springframework.http.HttpStatus.OK;
 @Service
 public class AuthService {
     @Autowired
-    private Bucket loginBucket;
-    @Autowired
-    private Bucket signupBucket;
+    private Bucket bucket;
     @Autowired
     private UserDetailsService userDetailsService;
 
@@ -43,9 +41,9 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public CustomResponse signup(SignupRequest signupRequest) throws UserAlreadyExistException {
-        if (!signupBucket.tryConsume(1)) {
-            throw new RuntimeException("Rate limit exceeded for signup !!");
+    public CustomResponse signup(SignupRequest signupRequest) throws UserAlreadyExistException, RateLimitException {
+        if (!bucket.tryConsume(1)) {
+            throw new RateLimitException("Rate limit exceeded for signup !!");
         }
         if (userRepository.existsByUsername(signupRequest.getUsername())) {
             throw new UserAlreadyExistException("Username is already taken!");
@@ -61,7 +59,7 @@ public class AuthService {
     }
 
     public CustomResponse login(JwtRequest jwtRequest) throws RateLimitException {
-        if (!loginBucket.tryConsume(1)) {
+        if (!bucket.tryConsume(1)) {
             throw new RateLimitException("Rate limit exceeded for login !!");
         }
         this.doAuthenticate(jwtRequest.getUsername(), jwtRequest.getPassword());
@@ -81,7 +79,6 @@ public class AuthService {
         try {
             authenticationManager.authenticate(authentication);
         } catch (BadCredentialsException e) {
-            e.printStackTrace();
             throw new RuntimeException("Invalid username or password !! {}" + e.getMessage());
         }
     }

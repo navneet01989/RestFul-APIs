@@ -29,6 +29,8 @@ public class AuthController {
             return new ResponseEntity<>(customResponse, customResponse.getStatus());
         } catch (UserAlreadyExistException e) {
             return Utils.returnErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED);
+        } catch (RateLimitException e) {
+            return Utils.returnErrorResponse(e.getMessage(), HttpStatus.TOO_MANY_REQUESTS);
         }
     }
 

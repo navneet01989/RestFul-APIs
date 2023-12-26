@@ -32,6 +32,7 @@ public class NotesService {
     private UserRepository userRepository;
 
     public CustomResponse createNote(NotesRequest notesRequest) {
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user = userRepository.findByUsername(auth.getName()).get();
         Note note = new Note();

@@ -17,10 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.OK;
@@ -51,17 +48,30 @@ public class NotesService {
     public CustomResponse getNotes() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user = userRepository.findByUsername(auth.getName()).get();
-        List<NotesDto> notesDtos = new ArrayList<>();
+        Map<String, Object> stringObjectMap = new HashMap<>();
         for (Note note : user.getUserNotes()) {
+            List<NotesDto> notesDtos = new ArrayList<>();
             Set<UserDto> userDtos = new HashSet<>();
             for (User userForDto : note.getSharedToUsers()) {
                 userDtos.add(new UserDto(userForDto.getUsername()));
             }
             notesDtos.add(new NotesDto(note.getId(), note.getTitle(), note.getDescription(), userDtos));
+            stringObjectMap.put("notes", notesDtos);
+        }
+        List<Note> notes = noteRepository.findBySharedToUser(user.getUsername());
+        for (Note note : notes) {
+            List<NotesDto> notesDtos = new ArrayList<>();
+            Set<UserDto> userDtos = new HashSet<>();
+            notesDtos.add(new NotesDto(note.getId(), note.getTitle(), note.getDescription(), userDtos));
+            stringObjectMap.put("notes_shared_to_me", notesDtos);
         }
         CustomResponse customResponse = new CustomResponse();
-        customResponse.setData(notesDtos);
-        customResponse.setMessage("data retrieved successfully");
+        if (!stringObjectMap.isEmpty()) {
+            customResponse.setData(stringObjectMap);
+            customResponse.setMessage("data retrieved successfully");
+        } else {
+            customResponse.setMessage("No data retrieved");
+        }
         customResponse.setStatus(OK);
         return customResponse;
     }
